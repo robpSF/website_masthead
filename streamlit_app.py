@@ -1,35 +1,41 @@
 import streamlit as st
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
 
-# Streamlit app
 st.title("Website Masthead Capture")
 
-# Input URL
 url = st.text_input("Enter the URL of the website:")
 
-def fetch_html_structure(url):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+@st.cache_resource
+def get_driver():
+    options = Options()
+    options.add_argument("--disable-gpu")
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    options.binary_location = "/usr/bin/chromium-browser"
 
-    service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver.set_window_size(1280, 720)  # Set the browser window size
+    return webdriver.Chrome(
+        service=Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()),
+        options=options
+    )
+
+def fetch_html_structure(url):
+    driver = get_driver()
+    driver.set_window_size(1280, 720)
     driver.get(url)
     
-    # Use explicit wait to ensure the page loads
     try:
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
     except Exception as e:
@@ -45,19 +51,10 @@ def fetch_html_structure(url):
     return unique_tags
 
 def capture_masthead(url, identifier, by=By.TAG_NAME):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-
-    service = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    driver.set_window_size(1280, 720)  # Set the browser window size
+    driver = get_driver()
+    driver.set_window_size(1280, 720)
     driver.get(url)
     
-    # Use explicit wait to ensure the element loads
     try:
         masthead_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
         masthead_image = masthead_element.screenshot_as_png
@@ -91,7 +88,6 @@ if url:
     except Exception as e:
         st.error(f"An error occurred: {e}")
 
-# Instructions for deploying this script on Streamlit Cloud
 st.write("""
 ## Instructions to deploy on Streamlit Cloud
 1. Create a new GitHub repository and upload this `app.py` file and `requirements.txt`.
