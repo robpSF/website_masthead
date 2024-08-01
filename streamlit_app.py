@@ -14,45 +14,57 @@ from bs4 import BeautifulSoup
 
 @st.cache_resource
 def install_geckodriver():
+    st.write("Downloading and installing geckodriver...")
     url = 'https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz'
     filename = 'geckodriver-v0.34.0-linux64.tar.gz'
     extract_path = './'
 
-    # Download the file
-    urllib.request.urlretrieve(url, filename)
+    try:
+        # Download the file
+        urllib.request.urlretrieve(url, filename)
+        st.write("Downloaded geckodriver.")
 
-    # Extract the tar file
-    with tarfile.open(filename) as tar:
-        tar.extractall(path=extract_path)
+        # Extract the tar file
+        with tarfile.open(filename) as tar:
+            tar.extractall(path=extract_path)
+        st.write("Extracted geckodriver.")
 
-    # Make the driver executable
-    os.chmod(os.path.join(extract_path, 'geckodriver'), 0o755)
+        # Make the driver executable
+        os.chmod(os.path.join(extract_path, 'geckodriver'), 0o755)
 
-    # Add to PATH
-    os.environ["PATH"] += os.pathsep + extract_path
+        # Add to PATH
+        os.environ["PATH"] += os.pathsep + extract_path
 
-    # Clean up
-    os.remove(filename)
+        # Clean up
+        os.remove(filename)
+        st.write("Geckodriver installation complete.")
+    except Exception as e:
+        st.write(f"An error occurred during geckodriver installation: {e}")
 
 _ = install_geckodriver()
 
 def get_driver():
+    st.write("Initializing the Firefox WebDriver...")
     options = FirefoxOptions()
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Firefox(service=FirefoxService(), options=options)
+    st.write("Firefox WebDriver initialized.")
     return driver
 
 def fetch_html_structure(url):
+    st.write(f"Fetching HTML structure for URL: {url}")
     driver = get_driver()
     driver.get(url)
     
-    # Use explicit wait to ensure the page loads
     try:
+        # Use explicit wait to ensure the page loads
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        st.write("Page loaded successfully.")
     except Exception as e:
         driver.quit()
+        st.write(f"An error occurred while loading the page: {e}")
         raise e
     
     page_source = driver.page_source
@@ -61,18 +73,22 @@ def fetch_html_structure(url):
     soup = BeautifulSoup(page_source, 'html.parser')
     tags = [tag.name for tag in soup.find_all()]
     unique_tags = set(tags)
+    st.write("Fetched HTML structure successfully.")
     return unique_tags
 
 def capture_masthead(url, identifier, by=By.TAG_NAME):
+    st.write(f"Capturing masthead for URL: {url} using identifier: {identifier}")
     driver = get_driver()
     driver.get(url)
     
-    # Use explicit wait to ensure the element loads
     try:
+        # Use explicit wait to ensure the element loads
         masthead_element = WebDriverWait(driver, 30).until(EC.presence_of_element_located((by, identifier)))
         masthead_image = masthead_element.screenshot_as_png
+        st.write("Masthead captured successfully.")
     except Exception as e:
         driver.quit()
+        st.write(f"An error occurred while capturing the masthead: {e}")
         raise e
     
     driver.quit()
@@ -108,13 +124,3 @@ if url:
             st.image(masthead_img, caption='Captured Masthead')
     except Exception as e:
         st.error(f"An error occurred: {e}")
-
-# Instructions for deploying this script on Streamlit Cloud
-st.write("""
-## Instructions to deploy on Streamlit Cloud
-1. Create a new GitHub repository and upload this `app.py` file and `requirements.txt`.
-2. Go to [Streamlit Cloud](https://streamlit.io/cloud) and sign in.
-3. Click on 'New app' and link your GitHub repository.
-4. Choose the branch and the main file (`app.py`) and click 'Deploy'.
-5. Your app will be available at a unique URL provided by Streamlit Cloud.
-""")
