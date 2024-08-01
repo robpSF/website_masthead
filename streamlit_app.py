@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import urllib.request
+import tarfile
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
@@ -9,15 +11,25 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
-import subprocess
 
 @st.cache_resource
 def install_geckodriver():
-    # Download and install geckodriver
-    subprocess.run(["wget", "https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz"], check=True)
-    subprocess.run(["tar", "-xvzf", "geckodriver-v0.30.0-linux64.tar.gz"], check=True)
-    subprocess.run(["chmod", "+x", "geckodriver"], check=True)
-    subprocess.run(["mv", "geckodriver", "/usr/local/bin/"], check=True)
+    url = 'https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz'
+    filename = 'geckodriver-v0.30.0-linux64.tar.gz'
+    extract_path = '/usr/local/bin/'
+
+    # Download the file
+    urllib.request.urlretrieve(url, filename)
+
+    # Extract the tar file
+    with tarfile.open(filename) as tar:
+        tar.extractall(path=extract_path)
+
+    # Make the driver executable
+    os.chmod(os.path.join(extract_path, 'geckodriver'), 0o755)
+
+    # Clean up
+    os.remove(filename)
 
 _ = install_geckodriver()
 
