@@ -1,87 +1,42 @@
 import streamlit as st
 import os
-import urllib.request
-import tarfile
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
 
 @st.cache_resource
-def install_geckodriver():
-    st.write("Downloading and installing geckodriver...")
-    url = 'https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz'
-    filename = 'geckodriver-v0.34.0-linux64.tar.gz'
-    extract_path = './'
-
+def install_chromedriver():
+    st.write("Setting up ChromeDriver...")
     try:
-        # Download the file
-        urllib.request.urlretrieve(url, filename)
-        st.write("Downloaded geckodriver.")
-
-        # Extract the tar file
-        with tarfile.open(filename) as tar:
-            tar.extractall(path=extract_path)
-        st.write("Extracted geckodriver.")
-
-        # Make the driver executable
-        os.chmod(os.path.join(extract_path, 'geckodriver'), 0o755)
-
-        # Add to PATH
-        os.environ["PATH"] += os.pathsep + extract_path
-
-        # Clean up
-        os.remove(filename)
-        st.write("Geckodriver installation complete.")
+        service = ChromeService(executable_path=ChromeDriverManager().install())
+        st.write("ChromeDriver setup complete.")
+        return service
     except Exception as e:
-        st.write(f"An error occurred during geckodriver installation: {e}")
+        st.write(f"An error occurred during ChromeDriver setup: {e}")
 
-@st.cache_resource
-def install_firefox():
-    st.write("Downloading and installing Firefox...")
-    url = 'https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US'
-    filename = 'firefox-latest.tar.bz2'
-    extract_path = './firefox/'
-
-    try:
-        # Download the file
-        urllib.request.urlretrieve(url, filename)
-        st.write("Downloaded Firefox.")
-
-        # Extract the tar file
-        with tarfile.open(filename, 'r:bz2') as tar:
-            tar.extractall(path=extract_path)
-        st.write("Extracted Firefox.")
-
-        # Add to PATH
-        os.environ["PATH"] += os.pathsep + os.path.join(extract_path, 'firefox')
-
-        # Clean up
-        os.remove(filename)
-        st.write("Firefox installation complete.")
-    except Exception as e:
-        st.write(f"An error occurred during Firefox installation: {e}")
-
-_ = install_geckodriver()
-install_firefox()
+chrome_service = install_chromedriver()
 
 def get_driver():
-    st.write("Initializing the Firefox WebDriver...")
+    st.write("Initializing the Chrome WebDriver...")
     try:
-        options = FirefoxOptions()
+        options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Firefox(service=FirefoxService(), options=options)
-        st.write("Firefox WebDriver initialized successfully.")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        driver = webdriver.Chrome(service=chrome_service, options=options)
+        st.write("Chrome WebDriver initialized successfully.")
         return driver
     except Exception as e:
-        st.write(f"An error occurred while initializing the Firefox WebDriver: {e}")
+        st.write(f"An error occurred while initializing the Chrome WebDriver: {e}")
         raise e
 
 def fetch_html_structure(url):
