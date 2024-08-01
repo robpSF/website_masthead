@@ -11,7 +11,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
-import subprocess
 
 @st.cache_resource
 def install_geckodriver():
@@ -42,11 +41,28 @@ def install_geckodriver():
     except Exception as e:
         st.write(f"An error occurred during geckodriver installation: {e}")
 
+@st.cache_resource
 def install_firefox():
-    st.write("Installing Firefox...")
+    st.write("Downloading and installing Firefox...")
+    url = 'https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US'
+    filename = 'firefox-latest.tar.bz2'
+    extract_path = './firefox/'
+
     try:
-        subprocess.run(["sudo", "apt-get", "update"], check=True)
-        subprocess.run(["sudo", "apt-get", "install", "-y", "firefox"], check=True)
+        # Download the file
+        urllib.request.urlretrieve(url, filename)
+        st.write("Downloaded Firefox.")
+
+        # Extract the tar file
+        with tarfile.open(filename, 'r:bz2') as tar:
+            tar.extractall(path=extract_path)
+        st.write("Extracted Firefox.")
+
+        # Add to PATH
+        os.environ["PATH"] += os.pathsep + os.path.join(extract_path, 'firefox')
+
+        # Clean up
+        os.remove(filename)
         st.write("Firefox installation complete.")
     except Exception as e:
         st.write(f"An error occurred during Firefox installation: {e}")
@@ -61,8 +77,7 @@ def get_driver():
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        options.binary_location = "/usr/bin/firefox"  # Ensure the correct binary location
-        driver = webdriver.Firefox(service=FirefoxService(log_path=os.path.devnull), options=options)
+        driver = webdriver.Firefox(service=FirefoxService(), options=options)
         st.write("Firefox WebDriver initialized successfully.")
         return driver
     except Exception as e:
