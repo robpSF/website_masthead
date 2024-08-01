@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
+import subprocess
 
 @st.cache_resource
 def install_geckodriver():
@@ -41,7 +42,17 @@ def install_geckodriver():
     except Exception as e:
         st.write(f"An error occurred during geckodriver installation: {e}")
 
+def install_firefox():
+    st.write("Installing Firefox...")
+    try:
+        subprocess.run(["sudo", "apt-get", "update"], check=True)
+        subprocess.run(["sudo", "apt-get", "install", "-y", "firefox"], check=True)
+        st.write("Firefox installation complete.")
+    except Exception as e:
+        st.write(f"An error occurred during Firefox installation: {e}")
+
 _ = install_geckodriver()
+install_firefox()
 
 def get_driver():
     st.write("Initializing the Firefox WebDriver...")
@@ -50,7 +61,8 @@ def get_driver():
         options.add_argument("--headless")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
-        driver = webdriver.Firefox(service=FirefoxService(), options=options)
+        options.binary_location = "/usr/bin/firefox"  # Ensure the correct binary location
+        driver = webdriver.Firefox(service=FirefoxService(log_path=os.path.devnull), options=options)
         st.write("Firefox WebDriver initialized successfully.")
         return driver
     except Exception as e:
