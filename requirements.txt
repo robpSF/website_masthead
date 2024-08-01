@@ -3,3 +3,4 @@ selenium
 Pillow
 webdriver-manager
 beautifulsoup4
+chromium-browser
