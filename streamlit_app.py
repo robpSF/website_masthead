@@ -45,56 +45,58 @@ _ = install_geckodriver()
 
 def get_driver():
     st.write("Initializing the Firefox WebDriver...")
-    options = FirefoxOptions()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    driver = webdriver.Firefox(service=FirefoxService(), options=options)
-    st.write("Firefox WebDriver initialized.")
-    return driver
+    try:
+        options = FirefoxOptions()
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        driver = webdriver.Firefox(service=FirefoxService(), options=options)
+        st.write("Firefox WebDriver initialized successfully.")
+        return driver
+    except Exception as e:
+        st.write(f"An error occurred while initializing the Firefox WebDriver: {e}")
+        raise e
 
 def fetch_html_structure(url):
     st.write(f"Fetching HTML structure for URL: {url}")
-    driver = get_driver()
-    driver.get(url)
-    
     try:
+        driver = get_driver()
+        driver.get(url)
+        
         # Use explicit wait to ensure the page loads
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
         st.write("Page loaded successfully.")
-    except Exception as e:
+        
+        page_source = driver.page_source
         driver.quit()
-        st.write(f"An error occurred while loading the page: {e}")
+        
+        soup = BeautifulSoup(page_source, 'html.parser')
+        tags = [tag.name for tag in soup.find_all()]
+        unique_tags = set(tags)
+        st.write("Fetched HTML structure successfully.")
+        return unique_tags
+    except Exception as e:
+        st.write(f"An error occurred while fetching HTML structure: {e}")
         raise e
-    
-    page_source = driver.page_source
-    driver.quit()
-    
-    soup = BeautifulSoup(page_source, 'html.parser')
-    tags = [tag.name for tag in soup.find_all()]
-    unique_tags = set(tags)
-    st.write("Fetched HTML structure successfully.")
-    return unique_tags
 
 def capture_masthead(url, identifier, by=By.TAG_NAME):
     st.write(f"Capturing masthead for URL: {url} using identifier: {identifier}")
-    driver = get_driver()
-    driver.get(url)
-    
     try:
+        driver = get_driver()
+        driver.get(url)
+        
         # Use explicit wait to ensure the element loads
         masthead_element = WebDriverWait(driver, 30).until(EC.presence_of_element_located((by, identifier)))
         masthead_image = masthead_element.screenshot_as_png
         st.write("Masthead captured successfully.")
-    except Exception as e:
+        
         driver.quit()
+        
+        image = Image.open(io.BytesIO(masthead_image))
+        return image
+    except Exception as e:
         st.write(f"An error occurred while capturing the masthead: {e}")
         raise e
-    
-    driver.quit()
-    
-    image = Image.open(io.BytesIO(masthead_image))
-    return image
 
 # Streamlit app
 st.title("Website Masthead Capture")
