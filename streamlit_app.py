@@ -1,9 +1,9 @@
 import streamlit as st
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.os_manager import ChromeType
@@ -19,6 +19,7 @@ def get_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--start-maximized")
     options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
     options.binary_location = "/usr/bin/chromium-browser"
 
@@ -29,12 +30,11 @@ def get_driver():
 
 def fetch_html_structure(url):
     driver = get_driver()
-    driver.set_window_size(1280, 720)  # Set the browser window size
     driver.get(url)
     
     # Use explicit wait to ensure the page loads
     try:
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))
     except Exception as e:
         driver.quit()
         raise e
@@ -49,12 +49,11 @@ def fetch_html_structure(url):
 
 def capture_masthead(url, identifier, by=By.TAG_NAME):
     driver = get_driver()
-    driver.set_window_size(1280, 720)  # Set the browser window size
     driver.get(url)
     
     # Use explicit wait to ensure the element loads
     try:
-        masthead_element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((by, identifier)))
+        masthead_element = WebDriverWait(driver, 30).until(EC.presence_of_element_located((by, identifier)))
         masthead_image = masthead_element.screenshot_as_png
     except Exception as e:
         driver.quit()
