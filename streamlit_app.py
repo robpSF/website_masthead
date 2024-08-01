@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import subprocess
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -12,16 +13,18 @@ import io
 from bs4 import BeautifulSoup
 
 @st.cache_resource
-def install_chromedriver():
-    st.write("Setting up ChromeDriver...")
+def install_dependencies():
+    st.write("Installing Chromium and dependencies...")
     try:
-        service = ChromeService(executable_path=ChromeDriverManager().install())
-        st.write("ChromeDriver setup complete.")
-        return service
+        # Update package list and install chromium and necessary dependencies
+        subprocess.run(["sudo", "apt-get", "update"], check=True)
+        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-browser"], check=True)
+        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-chromedriver"], check=True)
+        st.write("Chromium and dependencies installed.")
     except Exception as e:
-        st.write(f"An error occurred during ChromeDriver setup: {e}")
+        st.write(f"An error occurred during installation: {e}")
 
-chrome_service = install_chromedriver()
+install_dependencies()
 
 def get_driver():
     st.write("Initializing the Chrome WebDriver...")
@@ -32,7 +35,8 @@ def get_driver():
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        driver = webdriver.Chrome(service=chrome_service, options=options)
+        options.binary_location = "/usr/bin/chromium-browser"
+        driver = webdriver.Chrome(service=ChromeService("/usr/lib/chromium-browser/chromedriver"), options=options)
         st.write("Chrome WebDriver initialized successfully.")
         return driver
     except Exception as e:
