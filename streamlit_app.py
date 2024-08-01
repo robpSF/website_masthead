@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 def install_geckodriver():
     url = 'https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz'
     filename = 'geckodriver-v0.30.0-linux64.tar.gz'
-    extract_path = '/usr/local/bin/'
+    extract_path = './'
 
     # Download the file
     urllib.request.urlretrieve(url, filename)
@@ -27,6 +27,9 @@ def install_geckodriver():
 
     # Make the driver executable
     os.chmod(os.path.join(extract_path, 'geckodriver'), 0o755)
+
+    # Add to PATH
+    os.environ["PATH"] += os.pathsep + extract_path
 
     # Clean up
     os.remove(filename)
