@@ -1,6 +1,7 @@
 import streamlit as st
 import os
-import subprocess
+import urllib.request
+import zipfile
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options as ChromeOptions
@@ -13,18 +14,38 @@ import io
 from bs4 import BeautifulSoup
 
 @st.cache_resource
-def install_dependencies():
-    st.write("Installing Chromium and dependencies...")
-    try:
-        # Update package list and install chromium and necessary dependencies
-        subprocess.run(["sudo", "apt-get", "update"], check=True)
-        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-browser"], check=True)
-        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-chromedriver"], check=True)
-        st.write("Chromium and dependencies installed.")
-    except Exception as e:
-        st.write(f"An error occurred during installation: {e}")
+def install_chromium():
+    st.write("Downloading and setting up Chromium and ChromeDriver...")
 
-install_dependencies()
+    # Paths for Chromium and ChromeDriver
+    chromium_url = 'https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/818858/chrome-linux.zip'
+    chromedriver_url = 'https://chromedriver.storage.googleapis.com/87.0.4280.88/chromedriver_linux64.zip'
+    chromium_path = './chrome-linux'
+    chromedriver_path = './chromedriver'
+
+    # Download and extract Chromium
+    urllib.request.urlretrieve(chromium_url, 'chrome-linux.zip')
+    with zipfile.ZipFile('chrome-linux.zip', 'r') as zip_ref:
+        zip_ref.extractall('.')
+    os.chmod(f"{chromium_path}/chrome", 0o755)
+
+    # Download and extract ChromeDriver
+    urllib.request.urlretrieve(chromedriver_url, 'chromedriver_linux64.zip')
+    with zipfile.ZipFile('chromedriver_linux64.zip', 'r') as zip_ref:
+        zip_ref.extractall('.')
+    os.chmod(f"{chromedriver_path}", 0o755)
+
+    # Clean up
+    os.remove('chrome-linux.zip')
+    os.remove('chromedriver_linux64.zip')
+
+    # Add to PATH
+    os.environ["PATH"] += os.pathsep + os.path.abspath(chromium_path)
+    os.environ["PATH"] += os.pathsep + os.path.abspath('.')
+
+    st.write("Chromium and ChromeDriver setup complete.")
+
+install_chromium()
 
 def get_driver():
     st.write("Initializing the Chrome WebDriver...")
@@ -35,8 +56,8 @@ def get_driver():
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
         options.add_argument("--disable-blink-features=AutomationControlled")
-        options.binary_location = "/usr/bin/chromium-browser"
-        driver = webdriver.Chrome(service=ChromeService("/usr/lib/chromium-browser/chromedriver"), options=options)
+        options.binary_location = os.path.abspath('./chrome-linux/chrome')
+        driver = webdriver.Chrome(service=ChromeService(os.path.abspath('./chromedriver')), options=options)
         st.write("Chrome WebDriver initialized successfully.")
         return driver
     except Exception as e:
