@@ -14,8 +14,8 @@ from bs4 import BeautifulSoup
 
 @st.cache_resource
 def install_geckodriver():
-    url = 'https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz'
-    filename = 'geckodriver-v0.30.0-linux64.tar.gz'
+    url = 'https://github.com/mozilla/geckodriver/releases/download/v0.34.0/geckodriver-v0.34.0-linux64.tar.gz'
+    filename = 'geckodriver-v0.34.0-linux64.tar.gz'
     extract_path = './'
 
     # Download the file
