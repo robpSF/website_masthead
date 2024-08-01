@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from selenium import webdriver
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -9,7 +10,7 @@ from PIL import Image
 import io
 from bs4 import BeautifulSoup
 
-@st.experimental_singleton
+@st.cache_resource
 def install_ff():
     os.system('sbase install geckodriver')
     os.system('ln -s /home/appuser/venv/lib/python3.7/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
