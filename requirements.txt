@@ -1,6 +1,4 @@
 streamlit
 selenium
-Pillow
-webdriver-manager
 beautifulsoup4
-chromedriver-binary
+sbase
