@@ -10,9 +10,19 @@ from webdriver_manager.core.os_manager import ChromeType
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
+import subprocess
 
+# Function to install Chromium
+def install_chromium():
+    if not os.path.exists("/usr/bin/chromium-browser"):
+        st.write("Installing Chromium...")
+        subprocess.run(["sudo", "apt-get", "update"], check=True)
+        subprocess.run(["sudo", "apt-get", "install", "-y", "chromium-browser"], check=True)
+
+# Streamlit app
 st.title("Website Masthead Capture")
 
+# Input URL
 url = st.text_input("Enter the URL of the website:")
 
 @st.cache_resource
@@ -70,6 +80,7 @@ def capture_masthead(url, identifier, by=By.TAG_NAME):
 if url:
     st.write("Fetching information from:", url)
     try:
+        install_chromium()
         tags = fetch_html_structure(url)
         st.write("HTML Tags found on the page:", tags)
         
