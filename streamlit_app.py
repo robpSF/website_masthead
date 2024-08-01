@@ -9,18 +9,24 @@ from selenium.webdriver.support import expected_conditions as EC
 from PIL import Image
 import io
 from bs4 import BeautifulSoup
+import subprocess
 
 @st.cache_resource
-def install_ff():
-    os.system('sbase install geckodriver')
-    os.system('ln -s /home/appuser/venv/lib/python3.7/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
+def install_geckodriver():
+    # Download and install geckodriver
+    subprocess.run(["wget", "https://github.com/mozilla/geckodriver/releases/download/v0.30.0/geckodriver-v0.30.0-linux64.tar.gz"], check=True)
+    subprocess.run(["tar", "-xvzf", "geckodriver-v0.30.0-linux64.tar.gz"], check=True)
+    subprocess.run(["chmod", "+x", "geckodriver"], check=True)
+    subprocess.run(["mv", "geckodriver", "/usr/local/bin/"], check=True)
 
-_ = install_ff()
+_ = install_geckodriver()
 
 def get_driver():
     options = FirefoxOptions()
     options.add_argument("--headless")
-    driver = webdriver.Firefox(options=options)
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    driver = webdriver.Firefox(service=FirefoxService(), options=options)
     return driver
 
 def fetch_html_structure(url):
