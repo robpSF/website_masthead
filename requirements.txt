@@ -1,0 +1,5 @@
+streamlit
+selenium
+Pillow
+webdriver-manager
+beautifulsoup4
